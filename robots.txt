@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tzehin86-ui.github.io/sitemap.xml
