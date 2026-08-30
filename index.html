@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="WheelDesk — free calculators for options wheel traders: cost-basis after assignment, holding-period tax treatment, and a wash-sale checker that catches what your 1099-B misses.">
+<title>WheelDesk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+/* ---------- tokens: light is the complete set ---------- */
+:root{
+  --paper:#eef1ea;          /* ledger paper, green-biased neutral */
+  --sheet:#fbfcfa;
+  --ink:#152019;
+  --ink-2:#5a6a60;
+  --ink-3:#8b9a90;
+  --rule:#d5ddd2;
+  --rule-2:#e6ebe2;
+  --green:#2f6b4f;          /* accounting green */
+  --green-soft:#e2ece5;
+  --oxide:#a1381f;          /* form-stamp red, for tax owed */
+  --oxide-soft:#f6e6e0;
+  --field:#ffffff;
+  --shadow:0 1px 0 rgba(21,32,25,.05), 0 1px 3px rgba(21,32,25,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c110e;
+    --sheet:#141b16;
+    --ink:#e2e9e3;
+    --ink-2:#94a49a;
+    --ink-3:#6d7d73;
+    --rule:#26312a;
+    --rule-2:#1d2620;
+    --green:#5aa77c;
+    --green-soft:#16241c;
+    --oxide:#e07e63;
+    --oxide-soft:#2a1a15;
+    --field:#0f1611;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c110e;
+  --sheet:#141b16;
+  --ink:#e2e9e3;
+  --ink-2:#94a49a;
+  --ink-3:#6d7d73;
+  --rule:#26312a;
+  --rule-2:#1d2620;
+  --green:#5aa77c;
+  --green-soft:#16241c;
+  --oxide:#e07e63;
+  --oxide-soft:#2a1a15;
+  --field:#0f1611;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:720px;margin:0 auto;padding:28px 18px 72px;display:flex;flex-direction:column;gap:26px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;flex-direction:column;gap:12px;padding-bottom:22px;border-bottom:2px solid var(--ink)}
+.mast-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mark{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;font-size:13px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--green);
+}
+.stamp{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(28px,5.4vw,40px);line-height:1.12;letter-spacing:-.015em;
+  margin:0;text-wrap:balance;
+}
+.dek{margin:0;color:var(--ink-2);font-size:16px;max-width:56ch}
+
+/* ---------- tab bar ---------- */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);overflow-x:auto}
+.tab{
+  flex:0 0 auto;appearance:none;background:none;border:none;cursor:pointer;
+  padding:11px 15px;margin-bottom:-1px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;font-weight:500;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);
+  border-bottom:2px solid transparent;white-space:nowrap;
+}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--green)}
+.tab:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+
+/* ---------- worksheet ---------- */
+.sheet{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:4px;
+  box-shadow:var(--shadow);padding:22px 20px;display:flex;flex-direction:column;gap:20px;
+}
+.sheet-head{display:flex;flex-direction:column;gap:5px}
+.sheet-title{
+  font-family:"IBM Plex Serif",Georgia,serif;font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em;
+}
+.sheet-note{margin:0;font-size:13.5px;color:var(--ink-2)}
+
+fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+legend{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);padding:0;margin-bottom:2px;
+}
+.paths{display:flex;flex-direction:column;gap:7px}
+.path{
+  display:flex;gap:10px;align-items:flex-start;padding:10px 12px;
+  border:1px solid var(--rule);border-radius:4px;cursor:pointer;background:var(--field);
+}
+.path:hover{border-color:var(--ink-3)}
+.path input{margin:3px 0 0;accent-color:var(--green);flex:0 0 auto}
+.path b{display:block;font-weight:600;font-size:14px}
+.path span{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.4}
+.path:has(input:checked){border-color:var(--green);background:var(--green-soft)}
+.path:has(input:focus-visible){outline:2px solid var(--green);outline-offset:1px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px 14px}
+.f{display:flex;flex-direction:column;gap:5px}
+.f label{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.f input{
+  width:100%;padding:10px 11px;border:1px solid var(--rule);border-radius:3px;
+  background:var(--field);color:var(--ink);font-size:16px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
+}
+.f input:focus-visible{outline:2px solid var(--green);outline-offset:-1px;border-color:var(--green)}
+
+/* ---------- results: a numbered worksheet, like the form nobody gave you ---------- */
+.result{display:none;flex-direction:column;gap:0;border-top:2px solid var(--ink);padding-top:14px}
+.result.on{display:flex}
+.line{
+  display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:baseline;
+  padding:8px 0;border-bottom:1px solid var(--rule-2);
+}
+.line:last-of-type{border-bottom:none}
+.ln{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+.lbl{font-size:14px;color:var(--ink-2)}
+.lbl small{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.val{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
+  font-weight:500;font-size:15px;text-align:right;white-space:nowrap;
+}
+.line.total{border-top:1px solid var(--rule);border-bottom:none;margin-top:4px;padding-top:12px}
+.line.total .lbl{color:var(--ink);font-weight:600;font-size:14px}
+.line.total .val{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.pos{color:var(--green)} .neg{color:var(--oxide)}
+
+.verdict{
+  margin-top:14px;padding:13px 15px;border-left:3px solid var(--green);
+  background:var(--green-soft);font-size:14px;border-radius:0 3px 3px 0;
+}
+.verdict.warn{border-left-color:var(--oxide);background:var(--oxide-soft)}
+.verdict b{font-weight:600}
+.flag{
+  margin-top:9px;padding:11px 13px;border:1px dashed var(--oxide);border-radius:3px;
+  font-size:13px;color:var(--ink);background:var(--oxide-soft);
+}
+.flag strong{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--oxide);display:block;margin-bottom:3px;
+}
+
+/* ---------- closing ---------- */
+.cta{
+  border:1px solid var(--rule);border-left:3px solid var(--green);border-radius:0 4px 4px 0;
+  background:var(--sheet);padding:20px;display:flex;flex-direction:column;gap:9px;
+}
+.cta h2{font-family:"IBM Plex Serif",Georgia,serif;font-size:19px;margin:0;font-weight:600}
+.cta p{margin:0;color:var(--ink-2);font-size:14.5px}
+.cta ul{margin:2px 0 0;padding-left:18px;color:var(--ink-2);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.foot{
+  font-size:12.5px;color:var(--ink-3);line-height:1.6;border-top:1px solid var(--rule);padding-top:16px;
+}
+.foot b{color:var(--ink-2);font-weight:600}
+.hidden{display:none !important}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mast-top">
+      <span class="mark">WheelDesk</span>
+      <span class="stamp">Runs in your browser · nothing is sent anywhere</span>
+    </div>
+    <h1>The wheel worksheet the IRS never gave you.</h1>
+    <p class="dek">Premium is the easy part. What trips up wheel sellers is which leg is taxable, when the clock starts, and whether last month&rsquo;s loss still counts. Three worksheets, no signup.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-panel="p-cycle">Cycle P&amp;L + tax</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-roll">Roll math</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-wash">Wash-sale check</button>
+  </div>
+
+  <!-- ============ 1. CYCLE ============ -->
+  <section class="sheet" id="p-cycle" role="tabpanel">
+    <div class="sheet-head">
+      <h2 class="sheet-title">What the cycle actually earned you, after tax</h2>
+      <p class="sheet-note">Same trade, three endings &mdash; and the tax is different in each. Pick how yours ended.</p>
+    </div>
+
+    <fieldset>
+      <legend>How the cycle ended</legend>
+      <div class="paths">
+        <label class="path"><input type="radio" name="path" value="expired" checked>
+          <span><b>The put expired worthless</b><span>You kept the premium and never owned the shares.</span></span></label>
+        <label class="path"><input type="radio" name="path" value="holding">
+          <span><b>You were assigned &mdash; still holding</b><span>You own the shares now. Nothing is taxable yet.</span></span></label>
+        <label class="path"><input type="radio" name="path" value="full">
+          <span><b>Assigned, then called away</b><span>Full cycle: put assigned, covered call exercised.</span></span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your numbers</legend>
+      <div class="grid">
+        <div class="f"><label for="pk">Put strike</label><input id="pk" type="number" step="any" inputmode="decimal" placeholder="200"></div>
+        <div class="f"><label for="pp">Put premium / share</label><input id="pp" type="number" step="any" inputmode="decimal" placeholder="3.00"></div>
+        <div class="f cc"><label for="ck">Call strike</label><input id="ck" type="number" step="any" inputmode="decimal" placeholder="210"></div>
+        <div class="f cc"><label for="cp">Call premium / share</label><input id="cp" type="number" step="any" inputmode="decimal" placeholder="2.50"></div>
+        <div class="f mkt"><label for="mk">Share price today</label><input id="mk" type="number" step="any" inputmode="decimal" placeholder="196"></div>
+        <div class="f"><label for="nc">Contracts</label><input id="nc" type="number" step="1" inputmode="numeric" placeholder="1"></div>
+        <div class="f"><label for="dd" id="dd_lbl">Days in the trade</label><input id="dd" type="number" step="1" inputmode="numeric" placeholder="45"></div>
+        <div class="f"><label for="mr">Your marginal rate %</label><input id="mr" type="number" step="any" inputmode="decimal" placeholder="24"></div>
+      </div>
+    </fieldset>
+
+    <div class="result" id="cycle_out">
+      <div class="line"><span class="ln">1</span><span class="lbl">Premium collected</span><span class="val" id="o_prem">&mdash;</span></div>
+      <div class="line" id="row_basis"><span class="ln">2</span><span class="lbl">Cost basis per share<small>Strike minus the put premium &mdash; the premium is not separate income once you&rsquo;re assigned.</small></span><span class="val" id="o_basis">&mdash;</span></div>
+      <div class="line" id="row_proceeds"><span class="ln">3</span><span class="lbl">Proceeds per share<small>Call strike plus the call premium.</small></span><span class="val" id="o_proceeds">&mdash;</span></div>
+      <div class="line"><span class="ln">4</span><span class="lbl" id="o_gain_lbl">Realized capital gain</span><span class="val" id="o_gain">&mdash;</span></div>
+      <div class="line"><span class="ln">5</span><span class="lbl">Holding period</span><span class="val" id="o_hold">&mdash;</span></div>
+      <div class="line"><span class="ln">6</span><span class="lbl">Rate applied</span><span class="val" id="o_rate">&mdash;</span></div>
+      <div class="line"><span class="ln">7</span><span class="lbl" id="o_tax_lbl">Estimated tax owed</span><span class="val neg" id="o_tax">&mdash;</span></div>
+      <div class="line"><span class="ln">8</span><span class="lbl">Annualized return on capital tied up</span><span class="val" id="o_ann">&mdash;</span></div>
+      <div class="line total"><span class="ln">9</span><span class="lbl" id="o_net_lbl">Keep after tax</span><span class="val" id="o_net">&mdash;</span></div>
+      <div class="verdict" id="o_verdict"></div>
+      <div id="o_flags"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. ROLL ============ -->
+  <section class="sheet hidden" id="p-roll" role="tabpanel">
+    <div class="sheet-head">
+      <h2 class="sheet-title">Is this roll paying you, or are you paying it?</h2>
+      <p class="sheet-note">Closing the old contract and opening the next one are two separate trades. The credit is what you keep; the annualized number is what makes it comparable.</p>
+    </div>
+
+    <fieldset>
+      <legend>The roll</legend>
+      <div class="grid">
+        <div class="f"><label for="r_bb">Cost to buy back / share</label><input id="r_bb" type="number" step="any" inputmode="decimal" placeholder="4.20"></div>
+        <div class="f"><label for="r_cr">Credit on the new leg / share</label><input id="r_cr" type="number" step="any" inputmode="decimal" placeholder="5.10"></div>
+        <div class="f"><label for="r_k">New strike</label><input id="r_k" type="number" step="any" inputmode="decimal" placeholder="195"></div>
+        <div class="f"><label for="r_d">Days to the new expiry</label><input id="r_d" type="number" step="1" inputmode="numeric" placeholder="30"></div>
+        <div class="f"><label for="r_n">Contracts</label><input id="r_n" type="number" step="1" inputmode="numeric" placeholder="1"></div>
+        <div class="f"><label for="r_pc">Premium banked so far / share</label><input id="r_pc" type="number" step="any" inputmode="decimal" placeholder="6.80"></div>
+      </div>
+    </fieldset>
+
+    <div class="result" id="roll_out">
+      <div class="line"><span class="ln">1</span><span class="lbl">Net credit per share</span><span class="val" id="r_ps">&mdash;</span></div>
+      <div class="line"><span class="ln">2</span><span class="lbl">Realized now on the close<small>Buying back the old contract closes it today &mdash; that gain or loss lands in this tax year.</small></span><span class="val" id="r_closed">&mdash;</span></div>
+      <div class="line"><span class="ln">3</span><span class="lbl">Collateral committed</span><span class="val" id="r_coll">&mdash;</span></div>
+      <div class="line"><span class="ln">4</span><span class="lbl">Annualized yield on that collateral</span><span class="val" id="r_ann">&mdash;</span></div>
+      <div class="line"><span class="ln">5</span><span class="lbl">Break-even if assigned<small>New strike less every dollar of premium you&rsquo;ve banked on this position.</small></span><span class="val" id="r_be">&mdash;</span></div>
+      <div class="line total"><span class="ln">6</span><span class="lbl">Net on the roll</span><span class="val" id="r_net">&mdash;</span></div>
+      <div class="verdict" id="r_verdict"></div>
+      <div id="r_flags"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. WASH SALE ============ -->
+  <section class="sheet hidden" id="p-wash" role="tabpanel">
+    <div class="sheet-head">
+      <h2 class="sheet-title">Does the loss still count this year?</h2>
+      <p class="sheet-note">Take a loss, then get back into the same ticker within 30 days &mdash; including by assignment on a new put &mdash; and the loss is deferred, not deleted. It moves into the new lot&rsquo;s basis.</p>
+    </div>
+
+    <fieldset>
+      <legend>The loss</legend>
+      <div class="grid">
+        <div class="f"><label for="w_d1">Date you sold at a loss</label><input id="w_d1" type="date"></div>
+        <div class="f"><label for="w_amt">Loss amount ($)</label><input id="w_amt" type="number" step="any" inputmode="decimal" placeholder="1400"></div>
+        <div class="f"><label for="w_s1">Shares sold</label><input id="w_s1" type="number" step="1" inputmode="numeric" placeholder="100"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Getting back in</legend>
+      <div class="grid">
+        <div class="f"><label for="w_d2">Date you re-acquired</label><input id="w_d2" type="date"></div>
+        <div class="f"><label for="w_s2">Shares re-acquired</label><input id="w_s2" type="number" step="1" inputmode="numeric" placeholder="100"></div>
+      </div>
+      <p class="sheet-note">Assigned on a put counts as re-acquiring &mdash; use the assignment date. So does a buy in your IRA, or your spouse&rsquo;s account.</p>
+    </fieldset>
+
+    <div class="result" id="wash_out">
+      <div class="line"><span class="ln">1</span><span class="lbl">Wash-sale window</span><span class="val" id="w_win">&mdash;</span></div>
+      <div class="line"><span class="ln">2</span><span class="lbl">Days between the two trades</span><span class="val" id="w_gap">&mdash;</span></div>
+      <div class="line"><span class="ln">3</span><span class="lbl">Shares matched<small>Only the replaced shares are hit &mdash; a partial buy-back disallows a proportional slice.</small></span><span class="val" id="w_match">&mdash;</span></div>
+      <div class="line"><span class="ln">4</span><span class="lbl">Loss you can still deduct this year</span><span class="val pos" id="w_ok">&mdash;</span></div>
+      <div class="line total"><span class="ln">5</span><span class="lbl">Loss deferred into the new basis</span><span class="val" id="w_def">&mdash;</span></div>
+      <div class="verdict" id="w_verdict"></div>
+      <div id="w_flags"></div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h2>This is one cycle. Most people are tracking thirty.</h2>
+    <p>WheelDesk is being built to do this across your whole book &mdash; every put, every roll, every assignment &mdash; and hand you the numbers at filing time:</p>
+    <ul>
+      <li>Lot-level cost basis with the option adjustments already applied</li>
+      <li>Wash sales flagged across accounts before you place the next trade, not in April</li>
+      <li>Form 8949 / Schedule D export straight out of your broker&rsquo;s CSV</li>
+    </ul>
+    <p>If you run the wheel: which of those three would you actually pay for &mdash; and which one is already handled for you? That answer decides what gets built first.</p>
+  </div>
+
+  <p class="foot">
+    <b>Educational tool, not tax or investment advice.</b> These worksheets follow standard US treatment for equity options: written options that expire are short-term regardless of how long they were open; put premium reduces the basis of assigned shares; call premium is added to proceeds when shares are called away. They do <b>not</b> handle state tax, the 3.8% net investment income tax, straddle rules, Section 1256 contracts (index options such as SPX are taxed 60/40 &mdash; different rules entirely), or unqualified covered calls suspending your holding period. Long-term rates are estimated from your marginal bracket. Confirm anything that matters with a professional before you file.
+  </p>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var num = function(id){ var v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+
+  var money = function(v, dp){
+    var d = dp === undefined ? 0 : dp;
+    return (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+  };
+  var pct = function(v){ return v.toFixed(1) + "%"; };
+  var sign = function(el, v){ el.className = "val " + (v < 0 ? "neg" : "pos"); };
+
+  /* Long-term rate estimated from the marginal bracket. Rough by design, and labelled as such. */
+  function ltRate(marginal){
+    if(!marginal) return 0;
+    if(marginal <= 12) return 0;
+    if(marginal <= 35) return 15;
+    return 20;
+  }
+  function verdict(el, html, warn){
+    el.innerHTML = html;
+    el.className = "verdict" + (warn ? " warn" : "");
+  }
+  function flag(container, title, body){
+    var d = document.createElement("div");
+    d.className = "flag";
+    d.innerHTML = "<strong>" + title + "</strong>" + body;
+    container.appendChild(d);
+  }
+
+  /* ---------------- tabs ---------------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(x){
+        x.setAttribute("aria-selected", String(x === t));
+        $(x.getAttribute("data-panel")).classList.toggle("hidden", x !== t);
+      });
+    });
+  });
+
+  /* ---------------- 1. cycle ---------------- */
+  var paths = Array.prototype.slice.call(document.querySelectorAll('input[name="path"]'));
+  function currentPath(){
+    for(var i=0;i<paths.length;i++){ if(paths[i].checked) return paths[i].value; }
+    return "expired";
+  }
+
+  function syncCycleFields(){
+    var p = currentPath();
+    document.querySelectorAll("#p-cycle .cc").forEach(function(el){ el.classList.toggle("hidden", p !== "full"); });
+    document.querySelectorAll("#p-cycle .mkt").forEach(function(el){ el.classList.toggle("hidden", p !== "holding"); });
+    $("dd_lbl").textContent = p === "expired" ? "Days the put was open"
+      : p === "holding" ? "Days since assignment" : "Days you held the shares";
+    $("row_basis").classList.toggle("hidden", p === "expired");
+    $("row_proceeds").classList.toggle("hidden", p !== "full");
+  }
+
+  function calcCycle(){
+    var p = currentPath();
+    var pk = num("pk"), pp = num("pp"), ck = num("ck"), cp = num("cp"), mk = num("mk");
+    var n = num("nc") || 1, d = num("dd"), mr = num("mr");
+    var sh = 100 * n;
+    var out = $("cycle_out"), flags = $("o_flags");
+    flags.innerHTML = "";
+
+    var ready = p === "expired" ? (pk > 0 && pp > 0 && d > 0)
+              : p === "holding" ? (pk > 0 && pp > 0)
+              : (pk > 0 && pp > 0 && ck > 0 && d > 0);
+    if(!ready){ out.classList.remove("on"); return; }
+    out.classList.add("on");
+
+    var prem = (pp + (p === "full" ? cp : 0)) * sh;
+    var basis = pk - pp;
+    $("o_prem").textContent = money(prem);
+    $("o_prem").className = "val pos";
+    $("o_basis").textContent = "$" + basis.toFixed(2);
+    $("o_basis").className = "val";
+
+    if(p === "expired"){
+      /* A written option that expires is always a short-term gain, however long it was open. */
+      var gain = pp * sh;
+      var tax = gain * mr / 100;
+      var collateral = pk * sh;
+      var ann = collateral > 0 && d > 0 ? (gain / collateral) * (365 / d) * 100 : 0;
+
+      $("o_gain_lbl").textContent = "Realized capital gain";
+      $("o_gain").textContent = money(gain); sign($("o_gain"), gain);
+      $("o_hold").textContent = "Short-term";
+      $("o_rate").textContent = mr ? pct(mr) + " ordinary" : "—";
+      $("o_tax_lbl").textContent = "Estimated tax owed";
+      $("o_tax").textContent = money(tax);
+      $("o_tax").className = "val neg";
+      $("o_ann").textContent = pct(ann);
+      $("o_net_lbl").textContent = "Keep after tax";
+      $("o_net").textContent = money(gain - tax); sign($("o_net"), gain - tax);
+
+      verdict($("o_verdict"),
+        "Held it " + d + " days, but that doesn't matter here: <b>a written option you let expire is short-term, always</b>. There is no long-term rate on premium. The " +
+        money(tax) + " is the part most wheel sellers never set aside.", false);
+      if(mr && mr >= 32){
+        flag(flags, "Worth checking", "At your bracket the 3.8% net investment income tax may apply on top &mdash; roughly " + money(gain * 0.038) + " more. Not included above.");
+      }
+
+    } else if(p === "holding"){
+      /* Assignment is not a taxable event. This is the line item people get wrong most often. */
+      var unreal = mk > 0 ? (mk - basis) * sh : 0;
+      $("o_gain_lbl").textContent = "Realized capital gain";
+      $("o_gain").textContent = money(0);
+      $("o_gain").className = "val";
+      $("o_hold").textContent = d > 365 ? "Long-term so far" : "Short-term so far (" + (d ? 365 - d : 365) + "d to go)";
+      $("o_rate").textContent = "n/a — nothing realized";
+      $("o_tax_lbl").textContent = "Taxable this year";
+      $("o_tax").textContent = money(0);
+      $("o_tax").className = "val";
+      $("o_ann").textContent = "—";
+      $("o_net_lbl").textContent = mk > 0 ? "Unrealized on the shares" : "Taxable this year";
+      $("o_net").textContent = mk > 0 ? money(unreal) : money(0);
+      sign($("o_net"), mk > 0 ? unreal : 0);
+
+      verdict($("o_verdict"),
+        "<b>Assignment is not a taxable event.</b> You owe nothing on that " + money(pp * sh) +
+        " of put premium yet &mdash; it disappeared into your basis of $" + basis.toFixed(2) +
+        " a share and stays there until you sell. Your broker's 1099-B may still show the raw strike as your basis; that is the error that overstates your gain." +
+        (d > 0 && d <= 365 ? " Long-term rates start on day 366 — " + (365 - d) + " days out." : ""), false);
+      if(mk > 0 && mk < basis){
+        flag(flags, "Sitting on a loss", "You're " + money((basis - mk) * sh) + " under water. If you sell here and get assigned again on a new put within 30 days, that loss is deferred, not deducted — run the wash-sale worksheet before you place it.");
+      }
+
+    } else {
+      /* Full cycle: put assigned, then called away. */
+      var proceeds = ck + cp;
+      var g = (proceeds - basis) * sh;
+      var lt = d > 365;
+      var rate = lt ? ltRate(mr) : mr;
+      /* A loss isn't taxed — it offsets other gains, so it's worth the same rate back to you. */
+      var t2 = g * rate / 100;
+      var cap = basis * sh;
+      var ann2 = cap > 0 && d > 0 ? (g / cap) * (365 / d) * 100 : 0;
+
+      $("o_proceeds").textContent = "$" + proceeds.toFixed(2);
+      $("o_proceeds").className = "val";
+      $("o_gain_lbl").textContent = "Realized capital gain";
+      $("o_gain").textContent = money(g); sign($("o_gain"), g);
+      $("o_hold").textContent = lt ? "Long-term (>1 yr)" : "Short-term";
+      $("o_rate").textContent = !mr ? "—" : lt ? pct(rate) + " long-term (est.)" : pct(rate) + " ordinary";
+      $("o_tax_lbl").textContent = g >= 0 ? "Estimated tax owed" : "Tax the loss saves you";
+      $("o_tax").textContent = money(Math.abs(t2));
+      $("o_tax").className = "val " + (g >= 0 ? "neg" : "pos");
+      $("o_ann").textContent = pct(ann2);
+      $("o_net_lbl").textContent = g >= 0 ? "Keep after tax" : "Net loss, after the offset";
+      $("o_net").textContent = money(g - t2); sign($("o_net"), g - t2);
+
+      if(g >= 0){
+        verdict($("o_verdict"),
+          "One gain of " + money(g) + ", not two. The " + money(prem) + " of premium isn't taxed separately &mdash; the put premium came off your basis, the call premium went onto your proceeds, and this single line is what reaches Schedule D." +
+          (lt ? " Over a year, so it's taxed at the long-term rate." : " Under a year, so it's ordinary income at your full marginal rate."), false);
+      } else {
+        verdict($("o_verdict"),
+          "The cycle closed at a loss of " + money(-g) + " even though you collected " + money(prem) +
+          " in premium. Premium doesn't stop the shares from falling." +
+          (rate ? " The loss isn't wasted &mdash; it offsets other gains, so it's worth about " + money(-t2) +
+          " back to you, and up to $3,000 a year can go against ordinary income." : ""), true);
+        flag(flags, "Check before your next trade",
+          "Sell another put on this ticker and get assigned within 30 days and this " + money(-g) +
+          " loss is disallowed for the year — it shifts into the new lot's basis. Run the wash-sale worksheet.");
+      }
+      if(ck < pk){
+        flag(flags, "Unqualified covered call risk",
+          "You wrote the call below your put strike, so it was likely in the money when sold. Deep-in-the-money covered calls are <em>unqualified</em>: they suspend the holding-period clock on your shares, which can knock a long-term gain back to short-term.");
+      }
+      if(ck < basis){
+        flag(flags, "Called away below basis",
+          "The call strike is under your $" + basis.toFixed(2) + " basis, so assignment locks in a loss no matter how much premium you collected.");
+      }
+    }
+  }
+
+  ["pk","pp","ck","cp","mk","nc","dd","mr"].forEach(function(id){ $(id).addEventListener("input", calcCycle); });
+  paths.forEach(function(r){ r.addEventListener("change", function(){ syncCycleFields(); calcCycle(); }); });
+  syncCycleFields();
+
+  /* ---------------- 2. roll ---------------- */
+  function calcRoll(){
+    var bb = num("r_bb"), cr = num("r_cr"), k = num("r_k"), d = num("r_d"), n = num("r_n") || 1, banked = num("r_pc");
+    var out = $("roll_out"), flags = $("r_flags");
+    flags.innerHTML = "";
+    if(!(k > 0 && d > 0 && (bb > 0 || cr > 0))){ out.classList.remove("on"); return; }
+    out.classList.add("on");
+
+    var sh = 100 * n;
+    var ps = cr - bb;
+    var net = ps * sh;
+    var coll = k * sh;
+    var ann = (ps / k) * (365 / d) * 100;
+    var be = k - banked - cr;
+
+    $("r_ps").textContent = "$" + ps.toFixed(2); sign($("r_ps"), ps);
+    $("r_closed").textContent = money(-bb * sh, 0);
+    $("r_closed").className = "val neg";
+    $("r_coll").textContent = money(coll);
+    $("r_coll").className = "val";
+    $("r_ann").textContent = pct(ann); sign($("r_ann"), ann);
+    $("r_be").textContent = "$" + be.toFixed(2);
+    $("r_be").className = "val";
+    $("r_net").textContent = money(net); sign($("r_net"), net);
+
+    if(net >= 0){
+      verdict($("r_verdict"),
+        "<b>Net credit.</b> You're paid " + money(net) + " to push the deadline out " + d + " days &mdash; " + pct(ann) +
+        " annualized on the " + money(coll) + " you're tying up. That's the number to compare against just taking assignment and writing calls instead.", false);
+    } else {
+      verdict($("r_verdict"),
+        "<b>Net debit.</b> This roll costs you " + money(-net) + ". You're paying to avoid assignment, not earning. Worth it only if you'd rather not own the shares at $" +
+        k.toFixed(2) + " &mdash; otherwise taking assignment and selling calls is the cheaper path.", true);
+    }
+    flag(flags, "Tax note",
+      "The buy-back closes the old contract today, so its gain or loss is realized in this tax year even though the position feels continuous. If you closed it at a loss and the new contract is close in strike and expiry, that loss can be caught by the wash-sale rule and pushed into the new position.");
+  }
+  ["r_bb","r_cr","r_k","r_d","r_n","r_pc"].forEach(function(id){ $(id).addEventListener("input", calcRoll); });
+
+  /* ---------------- 3. wash sale ---------------- */
+  function parseDay(v){
+    if(!v) return null;
+    var p = v.split("-");
+    if(p.length !== 3) return null;
+    var dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  function fmtDay(dt){
+    return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric", timeZone:"UTC" });
+  }
+  function shift(dt, days){ return new Date(dt.getTime() + days * 86400000); }
+
+  function calcWash(){
+    var d1 = parseDay($("w_d1").value), d2 = parseDay($("w_d2").value);
+    var amt = num("w_amt"), s1 = num("w_s1"), s2 = num("w_s2");
+    var out = $("wash_out"), flags = $("w_flags");
+    flags.innerHTML = "";
+    if(!d1 || !d2 || amt <= 0 || s1 <= 0){ out.classList.remove("on"); return; }
+    out.classList.add("on");
+
+    var gap = Math.round((d2.getTime() - d1.getTime()) / 86400000);
+    var inWindow = Math.abs(gap) <= 30;
+    var matched = Math.min(s2 > 0 ? s2 : s1, s1);
+    var deferred = inWindow ? amt * (matched / s1) : 0;
+    var deductible = amt - deferred;
+
+    $("w_win").textContent = fmtDay(shift(d1, -30)) + " – " + fmtDay(shift(d1, 30));
+    $("w_win").className = "val";
+    $("w_gap").textContent = (gap === 0 ? "same day" : Math.abs(gap) + " days " + (gap > 0 ? "after" : "before"));
+    $("w_gap").className = "val " + (inWindow ? "neg" : "pos");
+    $("w_match").textContent = inWindow ? matched.toLocaleString("en-US") + " of " + s1.toLocaleString("en-US") : "0 of " + s1.toLocaleString("en-US");
+    $("w_match").className = "val";
+    $("w_ok").textContent = money(deductible);
+    $("w_ok").className = "val pos";
+    $("w_def").textContent = money(deferred);
+    sign($("w_def"), deferred > 0 ? -1 : 1);
+
+    if(!inWindow){
+      verdict($("w_verdict"),
+        "<b>Clear.</b> You got back in " + Math.abs(gap) + " days " + (gap > 0 ? "after" : "before") +
+        " the loss &mdash; outside the 61-day window &mdash; so the full " + money(amt) + " is deductible this year.", false);
+    } else {
+      verdict($("w_verdict"),
+        "<b>Wash sale.</b> " + money(deferred) + " of the loss is disallowed for this year. It isn't lost: it's added to the cost basis of the replacement shares, and your holding period on them starts back at the original purchase date. You get the deduction when you finally sell those and stay out for 31 days." +
+        (deductible > 0 ? " The other " + money(deductible) + " still counts now, because you only replaced " + matched + " of " + s1 + " shares." : ""), true);
+      flag(flags, "The part brokers miss",
+        "Your 1099-B only reports wash sales inside that one account. Re-buying in an IRA, in a second brokerage, or in your spouse's account is still a wash sale &mdash; and the IRA version is permanent: the basis adjustment has nowhere to live, so that loss is gone for good.");
+    }
+  }
+  ["w_d1","w_d2","w_amt","w_s1","w_s2"].forEach(function(id){
+    $(id).addEventListener("input", calcWash);
+    $(id).addEventListener("change", calcWash);
+  });
+})();
+</script>
+<footer style="max-width:760px;margin:64px auto 40px;padding:24px 20px 0;border-top:1px solid var(--rule,#d5ddd2);font:400 14px/1.6 'IBM Plex Sans',system-ui,sans-serif;color:var(--ink-2,#5a6a60)">
+  <p style="margin:0 0 10px">
+    <a href="./" style="color:inherit">Home</a> &middot;
+    <a href="./terms.html" style="color:inherit">Terms</a> &middot;
+    <a href="./refunds.html" style="color:inherit">Refunds</a> &middot;
+    <a href="./privacy.html" style="color:inherit">Privacy</a> &middot;
+    <a href="./contact.html" style="color:inherit">Contact</a>
+  </p>
+  <p style="margin:0">WheelDesk is operated by Kwan Tze Hin Eric, a sole trader based in Hong Kong. Contact: <a href="mailto:tzehin86@gmail.com" style="color:inherit">tzehin86@gmail.com</a></p>
+  <p style="margin:10px 0 0;font-size:13px">WheelDesk provides educational calculation tools only. It is not tax, legal, or investment advice, and we are not a licensed tax preparer or financial adviser. Verify all figures with a qualified professional before filing.</p>
+</footer>
+</body>
+</html>
