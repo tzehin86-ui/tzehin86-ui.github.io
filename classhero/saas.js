@@ -90,7 +90,7 @@
       },
       async signOut() { await sb.auth.signOut(); },
       async profile() {
-        const { data, error } = await sb.from('profiles').select('*, school:schools(id,name,seats,status,current_period_end)').eq('user_id', user.id).single();
+        const { data, error } = await sb.from('profiles').select('*, school:schools(id,name,seats,status,current_period_end,domain,allow_any_domain)').eq('user_id', user.id).single();
         if (error) throw error; return data;
       },
       async invites() {
@@ -198,6 +198,8 @@
       if (r.dev) { await refreshProfile(); accountPage(); note(r.msg); }
     } catch (e) { note('❌ ' + (e.message || e), 1); }
   }
+  const PUBLIC_MAIL = ['gmail.com', 'yahoo.com', 'yahoo.com.hk', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com', 'qq.com', '163.com', 'me.com'];
+  const domOf = (em) => String(em || '').toLowerCase().split('@')[1] || '';
   function schoolBuyPage() {
     ov(`<h2>🏫 學校方案</h2><p class="chDim">學校方案 HK$1,998／年（全校最多 100 位老師）。管理員付款後喺「學校管理」用 email 邀請同事，同事用該 email 登入即自動開通。</p>
       <label class="chLbl">學校名稱</label><input id="chSName" placeholder="例：聖保羅小學">
@@ -205,6 +207,8 @@
     $id('chSGo').onclick = () => {
       const schoolName = $id('chSName').value.trim();
       if (!schoolName) { note('請填學校名稱', 1); return; }
+      const d = domOf(profile && profile.email || user && user.email);
+      if (!d || PUBLIC_MAIL.includes(d)) { note('學校方案需要用學校 email 登記', 1); return; }
       buy('school', { schoolName });
     };
   }
@@ -244,6 +248,7 @@
     const s = profile.school || {};
     ov(`<h2>🏫 學校管理</h2>
       <div class="chRow"><span class="chDim">學校</span><b>${esc(s.name || '—')}</b></div>
+      <div class="chRow"><span class="chDim">學校網域</span><b>@${esc(s.domain || domOf(profile.email) || '—')}</b></div>
       <div class="chRow"><span class="chDim">老師人數</span><b id="chSeatUse">…</b></div>
       <div class="chRow"><span class="chDim">狀態</span><b>${esc({ active: '✅ 生效中', trialing: '試用中', past_due: '⚠️ 逾期未付', canceled: '已取消', pending: '等待付款' }[s.status] || s.status || '—')}</b></div>
       <label class="chLbl">邀請老師（email）</label>
@@ -268,6 +273,8 @@
     $id('chInvGo').onclick = async () => {
       const email = $id('chInv').value.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { note('請輸入正確 email', 1); return; }
+      const sd = (s.domain || domOf(profile.email)).toLowerCase();
+      if (!s.allow_any_domain && domOf(email) !== sd) { note('只可以邀請同一學校網域（@' + sd + '）嘅老師', 1); return; }
       if (cur.length >= (s.seats || 100)) { note('已達上限（' + (s.seats || 100) + ' 位老師），請先移除未用嘅邀請', 1); return; }
       try { await api.invite(email); $id('chInv').value = ''; note('✅ 已邀請 ' + email); cur = await draw(); } catch (e) { note('❌ ' + (e.message || e), 1); }
     };
