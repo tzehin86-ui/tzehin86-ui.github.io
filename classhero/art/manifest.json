@@ -1,0 +1,17 @@
+{
+ "art": {
+  "file": "art/art.json",
+  "v": "1040eda809",
+  "n": 221
+ },
+ "artIt": {
+  "file": "art/artIt.json",
+  "v": "92f5eb2e67",
+  "n": 38
+ },
+ "artPet": {
+  "file": "art/artPet.json",
+  "v": "f4ca818b24",
+  "n": 24
+ }
+}

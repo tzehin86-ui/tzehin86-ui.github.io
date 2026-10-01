@@ -1,0 +1,46 @@
+/* 班級英雄 SaaS 外殼：淺色遊樂園風（白卡、3px 深啡邊） */
+:root{--chInk:#3b2a1a;--chLine:#5a3a1e;--chBg:#fff4dc;--chMain:#ff8a3d;--chMain2:#ffb648;--chOk:#1f9a4c;--chBad:#d92f4c;--chDim:#7a6450}
+#chLoad,#chOv{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;
+ background:radial-gradient(900px 500px at 20% 0%,#ffe7a8 0%,transparent 60%),radial-gradient(800px 500px at 100% 100%,#ffd0e2 0%,transparent 60%),var(--chBg);
+ font-family:'Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;color:var(--chInk);overflow:auto}
+#chOv:not(.full){background:#3b2a1a88}
+#chOv[hidden]{display:none}
+.chCard{background:#fff;border:3px solid var(--chLine);border-radius:20px;box-shadow:0 6px 0 var(--chLine);padding:22px 20px;text-align:center}
+.chPanel{position:relative;width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow:auto;text-align:left;user-select:text}
+.chPanel h2{font-size:20px;font-weight:900;margin:2px 0 10px;text-align:center;color:var(--chInk)}
+.chLogo{font-size:42px;text-align:center;line-height:1.1}
+.chDim{color:var(--chDim);font-size:14px;line-height:1.5;margin:6px 0}
+.chDim.small,.small{font-size:12px}
+.chLbl{display:block;font-weight:800;font-size:13px;margin:12px 0 4px}
+#chOv input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:3px solid var(--chLine);border-radius:12px;background:#fffdf6;color:var(--chInk);user-select:text}
+#chOv input:focus{outline:none;border-color:var(--chMain)}
+.chBtn{display:block;width:100%;margin:10px 0 0;font:inherit;font-weight:900;font-size:15px;padding:11px 14px;border-radius:14px;cursor:pointer;
+ background:#fff;color:var(--chInk);border:3px solid var(--chLine);box-shadow:0 4px 0 var(--chLine);transition:.08s}
+.chBtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--chLine)}
+.chBtn.main{background:linear-gradient(var(--chMain2),var(--chMain));color:#3a1500}
+.chBtn.ghost{background:#fff8ea;box-shadow:none;border-width:2px;font-weight:700}
+.chBtn:disabled{opacity:.5}
+.chX{position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;color:var(--chDim);cursor:pointer}
+.chNote{min-height:18px;margin-top:10px;font-size:14px;font-weight:700;color:var(--chOk);text-align:center}
+.chNote.bad{color:var(--chBad)}
+.chRow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:2px dashed #ecdcc0;font-size:15px;flex-wrap:wrap}
+.chRow b{word-break:break-all;text-align:right}
+.chTrial{color:var(--chMain)}
+.chWarn{margin-top:10px;background:#ffe9ec;border:2px solid var(--chBad);border-radius:12px;padding:8px 10px;font-weight:800;color:var(--chBad);font-size:14px}
+.chBtns{margin-top:6px}
+.chPlans{display:flex;gap:10px;margin-top:10px}
+.chPlan{flex:1;border:3px solid var(--chLine);border-radius:16px;padding:10px;text-align:center;background:#fffaf0}
+.chPrice{font-size:22px;font-weight:900;margin:6px 0 0}.chPrice small{font-size:12px;color:var(--chDim)}
+.chInline{display:flex;gap:8px}.chInline .chBtn{width:auto;margin:0;white-space:nowrap}
+.chList{list-style:none;margin:10px 0 0;padding:0}
+.chList li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:2px dashed #ecdcc0;font-size:14px;word-break:break-all}
+.chList em{font-style:normal;font-size:12px;color:var(--chDim);margin-left:4px}.chList em.ok{color:var(--chOk)}
+.chMini{font:inherit;font-size:12px;font-weight:800;padding:4px 10px;border-radius:10px;border:2px solid var(--chLine);background:#fff;color:var(--chInk);cursor:pointer;flex:none}
+.chDev{margin-top:14px;font-size:13px}.chDev summary{cursor:pointer;color:var(--chDim)}
+.chDev .chBtn{display:inline-block;width:auto;margin:6px 4px 0 0;font-size:12px;padding:6px 10px}
+.chSpin{width:46px;height:46px;margin:0 auto 12px;border:5px solid #ffe2b0;border-top-color:var(--chMain);border-radius:50%;animation:chSp 0.9s linear infinite}
+@keyframes chSp{to{transform:rotate(360deg)}}
+#chLoadMsg{margin-top:6px;font-size:13px;color:var(--chDim)}
+.chAcct{white-space:nowrap}
+.chAcct.ro{background:linear-gradient(#ffb3c0,#ff7a90)!important;border-color:var(--chBad)!important}
+@media (max-width:420px){.chPlans{flex-direction:column}.chPanel{padding:18px 14px}}
