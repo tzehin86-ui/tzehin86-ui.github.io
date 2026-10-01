@@ -60,18 +60,20 @@
       async uninvite(email) { const p = me(); LSset(IK, (LSget(IK) || []).filter(i => !(i.school_id === p.school_id && i.email === email))); },
       async checkout(kind, opt) {
         const p = me();
+        if (kind === 'config') return { extra_seats: true, base_seats: 40 };
+        if (kind === 'school_seats') { const sch = LSget('ch_dev_school'); sch.seats = opt.seats; LSset('ch_dev_school', sch); return { ok: true, seats: opt.seats }; }
         if (kind === 'school') {
-          const sch = { id: 'dev-school', name: opt.schoolName || '測試學校', seats: 100, status: 'active' };
+          const sch = { id: 'dev-school', name: opt.schoolName || '測試學校', seats: Math.max(40, opt.seats || 40), status: 'active' };
           LSset('ch_dev_school', sch); p.school_id = sch.id; p.role = 'school_admin'; p.plan = 'school_seat';
         } else p.plan = 'teacher_active';
         put(p);
-        return { dev: true, msg: 'DEV：真環境會跳去 Stripe Checkout（' + (kind === 'school' ? '全校 HK$1,998／年' : '個人月費') + '）；而家直接當付款成功。' };
+        return { dev: true, msg: 'DEV：真環境會跳去 Stripe Checkout（' + (kind === 'school' ? '學校 HK$1,998／年（' + Math.max(40, opt.seats || 40) + ' 位老師）' : '個人月費') + '）；而家直接當付款成功。' };
       },
       async portal() { return { dev: true, msg: 'DEV：真環境會跳去 Stripe Customer Portal。' }; },
       // 開發用：改試用日數／角色
       dev: {
         trial(days) { const p = me(); p.plan = 'trial'; p.trial_ends_at = new Date(Date.now() + days * DAY).toISOString(); put(p); },
-        role(r) { const p = me(); p.role = r; if (r === 'school_admin' && !p.school_id) { LSset('ch_dev_school', { id: 'dev-school', name: '測試學校', seats: 100, status: 'active' }); p.school_id = 'dev-school'; } put(p); }
+        role(r) { const p = me(); p.role = r; if (r === 'school_admin' && !p.school_id) { LSset('ch_dev_school', { id: 'dev-school', name: '測試學校', seats: 40, status: 'active' }); p.school_id = 'dev-school'; } put(p); }
       }
     };
   }
@@ -184,7 +186,7 @@
       <p class="chDim">${esc(reason || '而家係唯讀模式：所有班級資料都睇得到、可以匯出，但唔可以加分或者修改。')}</p>
       <div class="chPlans">
         <div class="chPlan"><b>個人老師</b><div class="chPrice">HK$38<small>／月</small></div><button class="chBtn main" id="chBuyT">升級</button></div>
-        <div class="chPlan"><b>學校</b><div class="chPrice">HK$1,998<small>／年</small></div><div class="chDim small">全校最多 100 位老師</div><button class="chBtn" id="chBuyS">學校方案 HK$1,998／年</button></div>
+        <div class="chPlan"><b>學校</b><div class="chPrice">HK$1,998<small>／年</small></div><div class="chDim small">包 40 位老師，額外每位 HK$50／年</div><button class="chBtn" id="chBuyS">學校方案 HK$1,998／年</button></div>
       </div><div id="chNote" class="chNote"></div>`);
     $id('chBuyT').onclick = () => buy('teacher');
     $id('chBuyS').onclick = schoolBuyPage;
@@ -201,16 +203,21 @@
   const PUBLIC_MAIL = ['gmail.com', 'yahoo.com', 'yahoo.com.hk', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com', 'qq.com', '163.com', 'me.com'];
   const domOf = (em) => String(em || '').toLowerCase().split('@')[1] || '';
   function schoolBuyPage() {
-    ov(`<h2>🏫 學校方案</h2><p class="chDim">學校方案 HK$1,998／年（全校最多 100 位老師）。管理員付款後喺「學校管理」用 email 邀請同事，同事用該 email 登入即自動開通。</p>
+    ov(`<h2>🏫 學校方案</h2><p class="chDim">學校方案 HK$1,998／年（包 40 位老師，含管理員）。管理員付款後喺「學校管理」用 email 邀請同一學校網域嘅同事，同事用該 email 登入即自動開通。</p>
       <label class="chLbl">學校名稱</label><input id="chSName" placeholder="例：聖保羅小學">
+      <div id="chExtraBox" style="display:none"><label class="chLbl">老師人數（最少 40；多出每位 HK$50／年）</label><input id="chSSeats" type="number" min="40" max="1000" value="40"><div class="chDim small" id="chSTotal"></div></div>
       <button class="chBtn main" id="chSGo">前往付款</button><div id="chNote" class="chNote"></div>`);
     $id('chSGo').onclick = () => {
       const schoolName = $id('chSName').value.trim();
       if (!schoolName) { note('請填學校名稱', 1); return; }
       const d = domOf(profile && profile.email || user && user.email);
       if (!d || PUBLIC_MAIL.includes(d)) { note('學校方案需要用學校 email 登記', 1); return; }
-      buy('school', { schoolName });
+      const box = $id('chExtraBox');
+      const seats = box.style.display === 'none' ? 40 : Math.max(40, Math.min(1000, parseInt($id('chSSeats').value, 10) || 40));
+      buy('school', { schoolName, seats });
     };
+    const upd = () => { const n = Math.max(40, parseInt($id('chSSeats').value, 10) || 40); $id('chSTotal').textContent = '合共 HK$' + (1998 + (n - 40) * 50).toLocaleString() + '／年'; };
+    api.checkout('config', {}).then(c => { if (c && c.extra_seats) { $id('chExtraBox').style.display = ''; $id('chSSeats').oninput = upd; upd(); } }).catch(() => {});
   }
 
   async function refreshProfile() { profile = await api.profile(); syncBadge(); return profile; }
@@ -255,13 +262,14 @@
       <div class="chInline"><input id="chInv" type="email" placeholder="teacher@school.edu.hk"><button class="chBtn main" id="chInvGo">邀請</button></div>
       <div id="chNote" class="chNote"></div>
       <ul class="chList" id="chInvList"><li class="chDim">載入中…</li></ul>
-      <p class="chDim small">老師用被邀請嘅 email 登入就會自動加入學校。全校上限 100 位老師（含管理員）。</p>
+      <p class="chDim small">老師用被邀請嘅 email 登入就會自動加入學校。席位包管理員；方案包 40 位，要多可以喺下面加（每位 HK$50／年，按比例即時收費）。</p>
+      <div id="chAddBox" style="display:none"><label class="chLbl">增加席位：總老師人數</label><div class="chInline"><input id="chAddN" type="number" min="41" max="1000"><button class="chBtn" id="chAddGo">增加席位</button></div></div>
       <button class="chBtn ghost" id="chBack">← 返帳戶</button>`);
     $id('chBack').onclick = accountPage;
     const draw = async () => {
       let list = [];
       try { list = await api.invites(); } catch (e) { note('❌ ' + (e.message || e), 1); }
-      $id('chSeatUse').textContent = '已用 ' + list.length + '／' + (s.seats || 100);
+      $id('chSeatUse').textContent = '已用 ' + list.length + '／' + (s.seats || 40);
       $id('chInvList').innerHTML = list.length ? list.map(i => `<li><span>${esc(i.email)} ${i.accepted ? '<em class="ok">已加入</em>' : '<em>未登入</em>'}</span><button class="chMini" data-e="${esc(i.email)}">移除</button></li>`).join('') : '<li class="chDim">未有邀請</li>';
       $id('chInvList').querySelectorAll('[data-e]').forEach(x => x.onclick = async () => {
         if (!confirm('移除 ' + x.dataset.e + '？佢會失去學校方案（資料保留）。')) return;
@@ -270,12 +278,23 @@
       return list;
     };
     let cur = await draw();
+    if (['active', 'trialing'].includes(s.status)) api.checkout('config', {}).then(c => {
+      if (!c || !c.extra_seats) return;
+      $id('chAddBox').style.display = ''; $id('chAddN').value = (s.seats || 40) + 1;
+      $id('chAddGo').onclick = async () => {
+        const n = Math.max(41, Math.min(1000, parseInt($id('chAddN').value, 10) || 0));
+        if (n <= (s.seats || 40)) { note('只可以增加席位', 1); return; }
+        if (!confirm('增加到 ' + n + ' 位老師？會即時按比例收取額外席位費（每位 HK$50／年）。')) return;
+        note('處理緊…');
+        try { const r = await api.checkout('school_seats', { seats: n }); if (r.error) throw new Error(r.error); await refreshProfile(); note('✅ 席位已增加到 ' + r.seats); schoolPage(); } catch (e) { note('❌ ' + (e.message || e), 1); }
+      };
+    }).catch(() => {});
     $id('chInvGo').onclick = async () => {
       const email = $id('chInv').value.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { note('請輸入正確 email', 1); return; }
       const sd = (s.domain || domOf(profile.email)).toLowerCase();
       if (!s.allow_any_domain && domOf(email) !== sd) { note('只可以邀請同一學校網域（@' + sd + '）嘅老師', 1); return; }
-      if (cur.length >= (s.seats || 100)) { note('已達上限（' + (s.seats || 100) + ' 位老師），請先移除未用嘅邀請', 1); return; }
+      if (cur.length >= (s.seats || 40)) { note('已達上限（' + (s.seats || 40) + ' 位老師），請先增加席位或者移除未用嘅邀請', 1); return; }
       try { await api.invite(email); $id('chInv').value = ''; note('✅ 已邀請 ' + email); cur = await draw(); } catch (e) { note('❌ ' + (e.message || e), 1); }
     };
   }
