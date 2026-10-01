@@ -376,6 +376,15 @@
       if (!user) return;
       loadMsg('讀取帳戶…');
       await refreshProfile();
+      if (/[?&]paid=1/.test(location.search)) {
+        // Stripe 跳返嚟：webhook 可能遲幾秒先寫 DB，輪詢 profile（每 2 秒，最多 20 秒）
+        for (let i = 0; i < 10 && !['teacher', 'school'].includes(entitlement(profile).kind); i++) {
+          loadMsg('付款處理中…（' + (i + 1) * 2 + '秒）');
+          await new Promise(r => setTimeout(r, 2000));
+          await refreshProfile().catch(() => {});
+        }
+        history.replaceState(null, '', location.pathname + location.hash);
+      }
       store.init(CLOUD ? store.adapters.supabase(api.sb, user.id) : store.adapters.local(user.id), user.id);
       loadMsg('讀取班級資料…');
       let rec = await store.load();
