@@ -61,17 +61,17 @@
       async checkout(kind, opt) {
         const p = me();
         if (kind === 'school') {
-          const sch = { id: 'dev-school', name: opt.schoolName || '測試學校', seats: opt.seats, status: 'active' };
+          const sch = { id: 'dev-school', name: opt.schoolName || '測試學校', seats: 100, status: 'active' };
           LSset('ch_dev_school', sch); p.school_id = sch.id; p.role = 'school_admin'; p.plan = 'school_seat';
         } else p.plan = 'teacher_active';
         put(p);
-        return { dev: true, msg: 'DEV：真環境會跳去 Stripe Checkout（' + (kind === 'school' ? opt.seats + ' 個席位' : '個人月費') + '）；而家直接當付款成功。' };
+        return { dev: true, msg: 'DEV：真環境會跳去 Stripe Checkout（' + (kind === 'school' ? '全校 HK$1,998／年' : '個人月費') + '）；而家直接當付款成功。' };
       },
       async portal() { return { dev: true, msg: 'DEV：真環境會跳去 Stripe Customer Portal。' }; },
       // 開發用：改試用日數／角色
       dev: {
         trial(days) { const p = me(); p.plan = 'trial'; p.trial_ends_at = new Date(Date.now() + days * DAY).toISOString(); put(p); },
-        role(r) { const p = me(); p.role = r; if (r === 'school_admin' && !p.school_id) { LSset('ch_dev_school', { id: 'dev-school', name: '測試學校', seats: 5, status: 'active' }); p.school_id = 'dev-school'; } put(p); }
+        role(r) { const p = me(); p.role = r; if (r === 'school_admin' && !p.school_id) { LSset('ch_dev_school', { id: 'dev-school', name: '測試學校', seats: 100, status: 'active' }); p.school_id = 'dev-school'; } put(p); }
       }
     };
   }
@@ -184,7 +184,7 @@
       <p class="chDim">${esc(reason || '而家係唯讀模式：所有班級資料都睇得到、可以匯出，但唔可以加分或者修改。')}</p>
       <div class="chPlans">
         <div class="chPlan"><b>個人老師</b><div class="chPrice">HK$38<small>／月</small></div><button class="chBtn main" id="chBuyT">升級</button></div>
-        <div class="chPlan"><b>學校</b><div class="chPrice">HK$300<small>／位／年</small></div><button class="chBtn" id="chBuyS">學校方案</button></div>
+        <div class="chPlan"><b>學校</b><div class="chPrice">HK$1,998<small>／年</small></div><div class="chDim small">全校最多 100 位老師</div><button class="chBtn" id="chBuyS">學校方案 HK$1,998／年</button></div>
       </div><div id="chNote" class="chNote"></div>`);
     $id('chBuyT').onclick = () => buy('teacher');
     $id('chBuyS').onclick = schoolBuyPage;
@@ -199,15 +199,13 @@
     } catch (e) { note('❌ ' + (e.message || e), 1); }
   }
   function schoolBuyPage() {
-    ov(`<h2>🏫 學校方案</h2><p class="chDim">每位老師 HK$300／年。付款後喺「學校管理」用 email 邀請老師。</p>
+    ov(`<h2>🏫 學校方案</h2><p class="chDim">學校方案 HK$1,998／年（全校最多 100 位老師）。管理員付款後喺「學校管理」用 email 邀請同事，同事用該 email 登入即自動開通。</p>
       <label class="chLbl">學校名稱</label><input id="chSName" placeholder="例：聖保羅小學">
-      <label class="chLbl">席位（老師人數）</label><input id="chSSeats" type="number" min="1" max="500" value="5">
       <button class="chBtn main" id="chSGo">前往付款</button><div id="chNote" class="chNote"></div>`);
     $id('chSGo').onclick = () => {
-      const seats = Math.max(1, Math.min(500, parseInt($id('chSSeats').value, 10) || 1));
       const schoolName = $id('chSName').value.trim();
       if (!schoolName) { note('請填學校名稱', 1); return; }
-      buy('school', { seats, schoolName });
+      buy('school', { schoolName });
     };
   }
 
@@ -246,19 +244,19 @@
     const s = profile.school || {};
     ov(`<h2>🏫 學校管理</h2>
       <div class="chRow"><span class="chDim">學校</span><b>${esc(s.name || '—')}</b></div>
-      <div class="chRow"><span class="chDim">席位</span><b id="chSeatUse">…</b></div>
+      <div class="chRow"><span class="chDim">老師人數</span><b id="chSeatUse">…</b></div>
       <div class="chRow"><span class="chDim">狀態</span><b>${esc({ active: '✅ 生效中', trialing: '試用中', past_due: '⚠️ 逾期未付', canceled: '已取消', pending: '等待付款' }[s.status] || s.status || '—')}</b></div>
       <label class="chLbl">邀請老師（email）</label>
       <div class="chInline"><input id="chInv" type="email" placeholder="teacher@school.edu.hk"><button class="chBtn main" id="chInvGo">邀請</button></div>
       <div id="chNote" class="chNote"></div>
       <ul class="chList" id="chInvList"><li class="chDim">載入中…</li></ul>
-      <p class="chDim small">老師用被邀請嘅 email 登入就會自動加入學校。要加席位：撳「管理訂閱」改數量。</p>
+      <p class="chDim small">老師用被邀請嘅 email 登入就會自動加入學校。全校上限 100 位老師（含管理員）。</p>
       <button class="chBtn ghost" id="chBack">← 返帳戶</button>`);
     $id('chBack').onclick = accountPage;
     const draw = async () => {
       let list = [];
       try { list = await api.invites(); } catch (e) { note('❌ ' + (e.message || e), 1); }
-      $id('chSeatUse').textContent = list.length + ' / ' + (s.seats || 0) + ' 已用';
+      $id('chSeatUse').textContent = '已用 ' + list.length + '／' + (s.seats || 100);
       $id('chInvList').innerHTML = list.length ? list.map(i => `<li><span>${esc(i.email)} ${i.accepted ? '<em class="ok">已加入</em>' : '<em>未登入</em>'}</span><button class="chMini" data-e="${esc(i.email)}">移除</button></li>`).join('') : '<li class="chDim">未有邀請</li>';
       $id('chInvList').querySelectorAll('[data-e]').forEach(x => x.onclick = async () => {
         if (!confirm('移除 ' + x.dataset.e + '？佢會失去學校方案（資料保留）。')) return;
@@ -270,7 +268,7 @@
     $id('chInvGo').onclick = async () => {
       const email = $id('chInv').value.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { note('請輸入正確 email', 1); return; }
-      if (cur.length >= (s.seats || 0)) { note('席位已滿，請先喺「管理訂閱」加席位', 1); return; }
+      if (cur.length >= (s.seats || 100)) { note('已達上限（' + (s.seats || 100) + ' 位老師），請先移除未用嘅邀請', 1); return; }
       try { await api.invite(email); $id('chInv').value = ''; note('✅ 已邀請 ' + email); cur = await draw(); } catch (e) { note('❌ ' + (e.message || e), 1); }
     };
   }

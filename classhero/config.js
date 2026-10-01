@@ -4,7 +4,7 @@ window.CH_CONFIG = {
   SUPABASE_URL: 'https://rkqtivbzdxgbcnzekkci.supabase.co',                       // 例：https://abcdefgh.supabase.co
   SUPABASE_ANON_KEY: 'sb_publishable_xkegoxxNAqF8WTdAimTLLw_V2LN-ssq',                  // Supabase → Project Settings → API → anon public
   STRIPE_PRICE_TEACHER_MONTHLY: '',       // 例：price_1Q...（HK$38／月）
-  STRIPE_PRICE_SCHOOL_SEAT_YEARLY: '',    // 例：price_1Q...（HK$300／位／年）
+  STRIPE_PRICE_SCHOOL_SEAT_YEARLY: '',    // 例：price_1Q...（HK$1,998／年全校）
   TRIAL_DAYS: 14,
   DEV_FAKE_AUTH: false                    // true = 本機假帳戶（測試登入／試用／唯讀／學校頁，唔使 Supabase）
 };
