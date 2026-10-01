@@ -193,6 +193,7 @@
     note('準備付款頁…');
     try {
       const r = await api.checkout(kind, opt || {});
+      if (r.portal_url) { note('ℹ️ ' + (r.msg || '你已經有生效中嘅訂閱') + '，跳去管理頁…'); setTimeout(() => { location.href = r.portal_url; }, 1500); return; }
       if (r.url) { location.href = r.url; return; }
       if (r.dev) { await refreshProfile(); accountPage(); note(r.msg); }
     } catch (e) { note('❌ ' + (e.message || e), 1); }
