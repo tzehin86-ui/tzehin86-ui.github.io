@@ -1,0 +1,161 @@
+﻿<title>Warrly — Support</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1b1f24;
+    --muted: #5b6472;
+    --border: #e2e5ea;
+    --accent: #2557d6;
+    --card: #f6f8fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c;
+      --fg: #eceff3;
+      --muted: #a3adba;
+      --border: #2a2f37;
+      --accent: #6d9bff;
+      --card: #1b1f26;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  h2 {
+    font-size: 1.2rem;
+    margin: 38px 0 14px;
+  }
+  h3 {
+    font-size: 1.02rem;
+    margin: 20px 0 6px;
+  }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .faq-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .faq-item h3 { margin-top: 0; }
+  .faq-item p:last-child { margin-bottom: 0; }
+  code {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.92em;
+  }
+  a { color: var(--accent); }
+  .contact-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 8px;
+  }
+  footer {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+</style>
+
+<!-- What to change when the name is chosen: replace every Warrly placeholder with the final app name; replace {{SUPPORT_EMAIL}} with the real support inbox before publishing. -->
+
+<div class="wrap">
+  <header>
+    <h1>Warrly Support</h1>
+    <p class="subtitle">Everything below is accurate to how the app actually works: on-device, no account, no server.</p>
+  </header>
+
+  <h2>Frequently asked questions</h2>
+
+  <div class="faq-item">
+    <h3>Why does the app need camera access?</h3>
+    <p>Camera access is only requested when you tap the scan button to photograph a receipt. It's used solely to capture that one photo so the app can read the store name, date, and price off it — it isn't used in the background and isn't used for anything else. If you'd rather not grant camera access, you can pick a photo from your library instead, or add an item manually by typing the details yourself.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>What happens to my data if I delete the app?</h3>
+    <p>Everything — items, receipt photos, categories, reminders — is stored only on your device, so uninstalling the app removes all of it immediately and completely. There is no server-side copy anywhere to separately delete. If you want to keep your data before uninstalling, export a CSV/PDF or make a backup zip first (Pro feature) and save it somewhere else.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>Does this work without internet?</h3>
+    <p>Yes. Scanning, OCR, saving items, and reminders all run entirely on your device and work fully offline. The only things that need a connection at all are the App Store/Play Store purchase flow itself (handled by Apple/Google) and whatever app you choose to share an export or backup file to.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>What's the difference between Free and Pro?</h3>
+    <p>Free lets you track up to 5 items with a single reminder per item and no export. Pro removes the 5-item limit, adds multiple reminders per item, CSV/PDF export, and zip backup/restore. Pro is available as a yearly subscription (US$9.99/year) or a one-time lifetime purchase (US$19.99) — either unlocks the same full feature set.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>Can I use it on two devices?</h3>
+    <p>Your Pro purchase is tied to your Apple ID or Google account and can be restored (via Restore Purchases) on any device signed in with that same account. However, since there is no cloud sync, your actual items and receipt photos do not automatically appear on a second device — each device keeps its own local data. To move your items to another device, use Backup (Pro) to create a zip on the first device, transfer that file yourself, and Restore it on the second device.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>What file formats can I export to?</h3>
+    <p>CSV (for spreadsheets) and PDF (a one-page shareable summary, also available per-item from the Item detail screen) — both are Pro features. A backup, which is separate from export, produces a zip file containing your item data plus the original receipt photos, useful for moving data to a new device or keeping an off-device safety copy.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>Is my data ever uploaded anywhere?</h3>
+    <p>Not by the app. Warrly has no server, no analytics SDK, and no tracking of any kind — nothing is transmitted anywhere automatically. The only way any of your data leaves your device is if you personally create an export or backup file and then actively choose to share, email, or save it somewhere yourself using your device's normal share sheet.</p>
+  </div>
+
+  <div class="faq-item">
+    <h3>How accurate is the receipt scanning?</h3>
+    <p>OCR accuracy depends on photo quality, lighting, and how clean the receipt print is — faded thermal-paper receipts or blurry photos will read less reliably than a crisp, well-lit shot. That's why the Review screen always shows you the detected fields before saving and lets you tap any field to pick a different line the OCR detected, or type a correction yourself. Always give the prefilled fields a quick check before saving.</p>
+  </div>
+
+  <h2>How to restore your purchase</h2>
+  <p>If you've already bought Pro (yearly or lifetime) and it's not showing as active — for example after reinstalling the app or switching devices — open the <strong>Paywall</strong> screen (reachable from Settings) and tap <strong>Restore Purchases</strong>. This checks your Apple ID (iOS) or Google account (Android) — the same account originally used to buy Pro — and re-applies your entitlement locally. No login or account with us is involved; it's entirely handled by Apple/Google's own purchase records.</p>
+
+  <h2>How to back up your data</h2>
+  <p>Pro includes a Backup feature in Settings: it packages your item data and receipt photos into a single zip file and hands it to your device's share sheet, so you can save it to a cloud drive (iCloud Drive, Google Drive, Dropbox, etc.), AirDrop it to a computer, or email it to yourself. There is no automatic or background cloud sync — a backup only happens when you actively create one, so it's worth doing this periodically, and especially before switching to a new phone. To bring the data back, use <strong>Restore</strong> in Settings and pick the zip file you saved.</p>
+
+  <h2>How to delete your data</h2>
+  <p>To remove a single item: open it and tap Delete — this removes its record and photo immediately from your device. To remove everything at once: uninstall the app, which deletes its entire local database and all stored photos along with it. Because Warrly has no server and no account, there is no separate "data deletion request" to submit anywhere — deleting in-app or uninstalling is the complete and final action.</p>
+
+  <h2>Still need help?</h2>
+  <div class="contact-card">
+    <p>Email us and we'll get back to you: <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a></p>
+    <p>Please include your device model, OS version, and a short description of what happened — since we have no account system or server logs, we can only work from what you describe.</p>
+  </div>
+
+  <footer>
+    <p>Warrly — Support</p>
+  </footer>
+</div>

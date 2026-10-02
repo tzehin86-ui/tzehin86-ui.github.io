@@ -1,0 +1,168 @@
+﻿<title>Warrly — Privacy Policy</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1b1f24;
+    --muted: #5b6472;
+    --border: #e2e5ea;
+    --accent: #2557d6;
+    --card: #f6f8fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c;
+      --fg: #eceff3;
+      --muted: #a3adba;
+      --border: #2a2f37;
+      --accent: #6d9bff;
+      --card: #1b1f26;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+  }
+  .effective-date {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 36px 0 10px;
+  }
+  p { margin: 0 0 12px; }
+  ul { margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 18px 0 30px;
+  }
+  .summary-card ul { margin-bottom: 0; }
+  code {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.92em;
+  }
+  a { color: var(--accent); }
+  footer {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.94rem;
+    vertical-align: top;
+  }
+  th { color: var(--muted); font-weight: 600; }
+</style>
+
+<!-- What to change when the name is chosen: replace every Warrly placeholder with the final app name; replace {{SUPPORT_EMAIL}} with the real support inbox before publishing. -->
+
+<div class="wrap">
+  <header>
+    <h1>Warrly Privacy Policy</h1>
+    <p class="effective-date">Effective date: September 2026</p>
+  </header>
+
+  <div class="summary-card">
+    <p><strong>The short version:</strong></p>
+    <ul>
+      <li>Everything Warrly does — scanning, reading text off a receipt, storing your items, reminding you — happens on your device.</li>
+      <li>There is no user account, no sign-in, and no server that your data is sent to.</li>
+      <li>The app contains no analytics SDK, no crash-reporting SDK, no advertising SDK, and does not track you.</li>
+      <li>An export or backup file only leaves your device if and when you choose to share or save it yourself.</li>
+    </ul>
+  </div>
+
+  <h2>1. Who this policy covers</h2>
+  <p>This policy describes how Warrly (the "app") handles information on iOS and Android. Warrly is built and maintained by an independent developer. There is no company account system, no user database, and no analytics dashboard on our side — because none of your data is sent to us in the first place.</p>
+
+  <h2>2. What the app processes, and where it stays</h2>
+  <p>When you use Warrly, the following information is created and stored, entirely on your own device:</p>
+  <ul>
+    <li><strong>Receipt photos</strong> you take with the camera or choose from your photo library.</li>
+    <li><strong>Text read from that photo</strong> by on-device OCR (optical character recognition), used to suggest the store name, purchase date, and price.</li>
+    <li><strong>Item details</strong> you enter or confirm: item name, category, merchant, purchase date, price, currency, warranty length, computed expiry date, and any notes you add.</li>
+    <li><strong>Reminder schedules</strong> for the 30/7/1-day warranty notifications, generated and stored locally so the operating system can fire them at the right time.</li>
+  </ul>
+  <p>All of the above is stored in a local database on your device (using an on-device SQLite database) and in your device's local app storage for photos. None of it is transmitted to us, to an analytics provider, to an advertising network, or to any other third party by the app. There is no "sync," no cloud account, and no server-side copy of any of your data.</p>
+
+  <h2>3. On-device OCR and processing</h2>
+  <p>Text recognition (reading the store name, date, and price off a receipt photo) is performed entirely on your device using an on-device text-recognition model. The photo and the text extracted from it are never uploaded anywhere for this process — recognition happens locally, and the result is written straight into the app's local database on your device.</p>
+
+  <h2>4. Permissions we ask for, and why</h2>
+  <table>
+    <tr><th>Permission</th><th>Used for</th></tr>
+    <tr><td>Camera</td><td>Only when you choose to photograph a receipt. Camera access is requested at the moment you tap the scan button, and is used only for that purpose — it is not used in the background or for anything else.</td></tr>
+    <tr><td>Photo library</td><td>Only if you choose "pick from gallery" instead of the camera, so you can select an existing photo of a receipt.</td></tr>
+    <tr><td>Notifications</td><td>Only to deliver the local 30/7/1-day warranty reminders that your saved items generate. These reminders are scheduled and fired entirely on your device — there is no push-notification server.</td></tr>
+  </table>
+
+  <h2>5. No accounts, no identity</h2>
+  <p>Warrly does not have a sign-up or login screen. There is no username, email, or password associated with your use of the app, and nothing you do in the app is tied to a personal identity on our end — because we never receive any of it.</p>
+
+  <h2>6. Analytics, crash reporting, advertising, and tracking</h2>
+  <p>The app contains no third-party analytics SDK, no crash-reporting SDK, and no advertising SDK. We do not track your activity in the app, across other apps, or across websites, and we do not build any profile of you or your device.</p>
+
+  <h2>7. In-app purchases</h2>
+  <p>Warrly offers optional Pro upgrades (a yearly subscription and a one-time lifetime purchase) through Apple's App Store or Google Play's in-app purchase systems. These purchases are processed entirely by Apple or Google — the app developer never sees your payment card number, billing address, or other payment details. Apple and Google's own privacy policies govern how they handle your purchase and billing information.</p>
+
+  <h2>8. Exporting and backing up your data</h2>
+  <p>Warrly lets you (as a Pro feature) create:</p>
+  <ul>
+    <li><strong>A CSV or PDF export</strong>, containing: item name, category, merchant, purchase date, price, currency, warranty length, expiry date, and notes.</li>
+    <li><strong>A backup zip file</strong>, containing the same item data plus the receipt photos themselves.</li>
+  </ul>
+  <p>These files are generated on your device and handed to the operating system's normal share sheet or save dialog. The app itself never uploads or transmits this file anywhere. It leaves your device only if and when you personally choose to share it (for example, by AirDropping it, emailing it to yourself, or saving it to your own cloud drive) — that choice, and any resulting transmission, is entirely yours to make and outside the app's control once shared.</p>
+
+  <h2>9. Data retention and deletion</h2>
+  <p>Your data stays on your device for as long as you keep the app installed and the item saved. You can delete any individual item at any time from within the app, which removes its data and photo immediately. Uninstalling the app removes its entire local database and all stored photos. Because nothing is stored on a server, there is no separate "request deletion" process to go through — deleting in-app or uninstalling is complete and immediate.</p>
+
+  <h2>10. Children's privacy</h2>
+  <p>Warrly is a general-purpose utility app not directed at children, does not collect personal information from anyone (child or adult), and has no account system to restrict by age.</p>
+
+  <h2>11. Changes to this policy</h2>
+  <p>If this policy changes, the "Effective date" above will be updated and the new version will be posted at this same page.</p>
+
+  <h2>12. Contact</h2>
+  <p>Questions about this policy or the app's data handling can be sent to: <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a></p>
+
+  <footer>
+    <p>Warrly — Privacy Policy — Effective September 2026</p>
+  </footer>
+</div>
